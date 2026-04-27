@@ -6,3 +6,4 @@ wtforms
 gunicorn
 email-validator
 psycopg2-binary
+bcrypt
