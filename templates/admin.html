@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Panel de Administrador - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-primary mb-8">Panel de Administrador</h1>
+
+    <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <p class="text-3xl font-bold text-primary">{{ total_estudiantes }}</p>
+            <p class="text-gray-600">Estudiantes</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <p class="text-3xl font-bold text-blue-600">{{ total_profesores }}</p>
+            <p class="text-gray-600">Profesores</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <p class="text-3xl font-bold text-green-600">{{ usuarios_activos }}</p>
+            <p class="text-gray-600">Activos</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <p class="text-3xl font-bold text-accent">{{ lecturas_completadas }}</p>
+            <p class="text-gray-600">Lecturas Completadas</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-primary mb-4">Todos los Usuarios</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-3 text-left">Usuario</th>
+                        <th class="p-3 text-left">Email</th>
+                        <th class="p-3 text-left">Rol</th>
+                        <th class="p-3 text-left">Tipo</th>
+                        <th class="p-3 text-left">Puntos</th>
+                        <th class="p-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr class="border-b">
+                        <td class="p-3">{{ u.username }}</td>
+                        <td class="p-3">{{ u.email }}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-sm {% if u.rol == 'admin' %}bg-red-100 text-red-800{% elif u.rol == 'profesor' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ u.rol }}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-sm {% if u.tipo_usuario == 'institucional' %}bg-purple-100 text-purple-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ u.tipo_usuario }}
+                            </span>
+                        </td>
+                        <td class="p-3">{{ u.puntos_totales }}</td>
+                        <td class="p-3">
+                            {% if u.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin.promover_usuario', usuario_id=u.id) }}" class="flex gap-2">
+                                <select name="rol" class="border rounded px-2 py-1 text-sm">
+                                    <option value="estudiante" {% if u.rol == 'estudiante' %}selected{% endif %}>Estudiante</option>
+                                    <option value="profesor" {% if u.rol == 'profesor' %}selected{% endif %}>Profesor</option>
+                                    <option value="admin" {% if u.rol == 'admin' %}selected{% endif %}>Admin</option>
+                                </select>
+                                <select name="tipo_usuario" class="border rounded px-2 py-1 text-sm">
+                                    <option value="gratuito" {% if u.tipo_usuario == 'gratuito' %}selected{% endif %}>Gratuito</option>
+                                    <option value="institucional" {% if u.tipo_usuario == 'institucional' %}selected{% endif %}>Institucional</option>
+                                </select>
+                                <button type="submit" class="bg-secondary text-white px-2 py-1 rounded text-sm">Guardar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+        <a href="{{ url_for('admin.metricas') }}" class="bg-accent hover:opacity-90 text-primary rounded-xl p-6 transition">
+            <h3 class="text-xl font-semibold mb-2">📊 Métricas</h3>
+            <p class="opacity-90">Ver estadísticas completas</p>
+        </a>
+        
+        <a href="{{ url_for('admin.mis_grupos') }}" class="bg-secondary hover:bg-blue-600 text-white rounded-xl p-6 transition">
+            <h3 class="text-xl font-semibold mb-2">👥 Mis Grupos</h3>
+            <p class="opacity-90">Ver y crear grupos</p>
+        </a>
+        
+        <a href="{{ url_for('admin.unidos_grupo') }}" class="bg-green-500 hover:bg-green-600 text-white rounded-xl p-6 transition">
+            <h3 class="text-xl font-semibold mb-2">🔗 Unirse a Grupo</h3>
+            <p class="opacity-90">Unirse con código</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

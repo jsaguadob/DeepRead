@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Dashboard - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-primary">¡Hola, {{ usuario.username }}! 👋</h1>
+        <p class="text-gray-600">Sigue leyendo y mejorando tus habilidades</p>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">⭐</div>
+                <div>
+                    <p class="text-sm text-gray-600">Puntos</p>
+                    <p class="text-2xl font-bold text-primary">{{ usuario.puntos_totales }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">📈</div>
+                <div>
+                    <p class="text-sm text-gray-600">Nivel</p>
+                    <p class="text-2xl font-bold text-primary">{{ usuario.nivel_actual }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">🔥</div>
+                <div>
+                    <p class="text-sm text-gray-600">Racha</p>
+                    <p class="text-2xl font-bold text-primary">{{ usuario.racha_dias }} días</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center gap-4">
+                <div class="text-4xl">✅</div>
+                <div>
+                    <p class="text-sm text-gray-600">Completadas</p>
+                    <p class="text-2xl font-bold text-primary">{{ lecturas_completadas }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-primary mb-4">Progreso hacia Nivel {{ usuario.nivel_actual + 1 }}</h2>
+        <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="bg-accent h-4 rounded-full transition-all duration-500" style="width: {{ progreso_nivel|int }}%"></div>
+        </div>
+        <p class="text-sm text-gray-600 mt-2">{{ usuario.puntos_totales }} / {{ puntos_necesarios }} puntos ({{ progreso_nivel|int }}%)</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <a href="{{ url_for('main.lecturas') }}" class="bg-secondary hover:bg-blue-600 text-white rounded-xl shadow-md p-6 transition">
+            <h3 class="text-xl font-semibold mb-2">📚 Leer Ahora</h3>
+            <p class="opacity-90">Explora lecturas adaptadas a tu nivel</p>
+        </a>
+        
+        <a href="{{ url_for('main.progreso') }}" class="bg-accent hover:opacity-90 text-primary rounded-xl shadow-md p-6 transition">
+            <h3 class="text-xl font-semibold mb-2">📊 Mi Progreso</h3>
+            <p class="opacity-90">Revisa tu historial de lecturas</p>
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-semibold text-primary mb-4">Lecturas Recientes</h2>
+        {% if lecturas_recientes %}
+            <div class="space-y-3">
+                {% for prog in lecturas_recientes %}
+                <div class="flex items-center justify-between p-3 bg-cream rounded-lg">
+                    <span class="font-medium text-gray-800">Lectura #{{ prog.lectura_id }}</span>
+                    <span class="text-sm text-green-600">✓ +{{ prog.puntos_obtenidos }} pts</span>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600 text-center py-4">Aún no has leído ninguna lectura. ¡Comienza ahora!</p>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('main.lecturas') }}" class="text-secondary hover:text-blue-600 font-medium">Ver lecturas disponibles →</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

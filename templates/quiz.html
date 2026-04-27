@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz: {{ lectura.titulo }} - DeepRead{% endblock %}
+
+{% block content %}
+<script>
+var quizToken = '{{ session_token }}';
+if (sessionStorage.getItem('quiz_lock') === quizToken) {
+    alert('Ya tienes un quiz abierto en otra pestaña');
+    window.location.href = '{{ url_for("main.dashboard") }}';
+}
+sessionStorage.setItem('quiz_lock', quizToken);
+window.addEventListener('beforeunload', function() {
+    sessionStorage.removeItem('quiz_lock');
+});
+</script>
+
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('main.ver_lectura', lectura_id=lectura.id) }}" class="text-secondary hover:text-blue-600">
+            ← Volver a la Lectura
+        </a>
+    </div>
+
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-xl shadow-md p-8">
+            <h1 class="text-2xl font-bold text-primary mb-2">Quiz de Comprensión</h1>
+            <p class="text-gray-600 mb-4">{{ lectura.titulo }}</p>
+            
+            <div class="bg-cream p-3 rounded-lg mb-6">
+                <p class="text-sm">
+                    <strong>Intentos:</strong> {{ intentos + 1 }}/{{ max_intentos }} 
+                    <span class="text-gray-500">(Max {{ max_intentos }} intentos)</span>
+                </p>
+            </div>
+
+            <form method="POST" class="space-y-8" onsubmit="return confirm('¿Enviar respuestas? No podrás volver a intentarlo.');">
+                <input type="hidden" name="session_token" value="{{ session_token }}">
+                
+                {% for pregunta in preguntas %}
+                <div class="border border-gray-200 rounded-lg p-6">
+                    <p class="font-medium text-gray-800 mb-4">{{ loop.index }}. {{ pregunta.pregunta }}</p>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-cream transition">
+                            <input type="radio" name="pregunta_{{ pregunta.id }}" value="a" required class="w-4 h-4 text-secondary">
+                            <span class="text-gray-700">a) {{ pregunta.opcion_a }}</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-cream transition">
+                            <input type="radio" name="pregunta_{{ pregunta.id }}" value="b" required class="w-4 h-4 text-secondary">
+                            <span class="text-gray-700">b) {{ pregunta.opcion_b }}</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-cream transition">
+                            <input type="radio" name="pregunta_{{ pregunta.id }}" value="c" required class="w-4 h-4 text-secondary">
+                            <span class="text-gray-700">c) {{ pregunta.opcion_c }}</span>
+                        </label>
+                        
+                        <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-cream transition">
+                            <input type="radio" name="pregunta_{{ pregunta.id }}" value="d" required class="w-4 h-4 text-secondary">
+                            <span class="text-gray-700">d) {{ pregunta.opcion_d }}</span>
+                        </label>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <button type="submit" class="w-full bg-accent hover:opacity-90 text-primary py-3 rounded-lg font-medium transition shadow-md">
+                    Enviar Respuestas
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

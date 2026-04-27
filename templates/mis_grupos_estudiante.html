@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Grupos - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-primary mb-8">Mis Grupos</h1>
+
+    {% if current_user.es_profesor() %}
+    <div class="mb-8">
+        <a href="{{ url_for('admin.crear_grupo') }}" class="bg-accent hover:opacity-90 text-primary px-4 py-2 rounded-lg font-medium">
+            + Crear Nuevo Grupo
+        </a>
+    </div>
+    {% endif %}
+
+    {% if grupos %}
+        <div class="grid md:grid-cols-2 gap-6">
+            {% for grupo in grupos %}
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h2 class="text-xl font-semibold text-primary">{{ grupo.nombre }}</h2>
+                        <p class="text-sm text-gray-600">{{ grupo.descripcion or 'Sin descripción' }}</p>
+                    </div>
+                    <span class="px-3 py-1 rounded text-sm {% if grupo.rol == 'profesor' %}bg-blue-100 text-blue-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ grupo.rol }}
+                    </span>
+                </div>
+                
+                {% if grupo.codigo %}
+                <div class="bg-cream p-3 rounded-lg mb-4">
+                    <p class="text-sm text-gray-600">Código de grupo:</p>
+                    <p class="text-xl font-bold text-accent">{{ grupo.codigo }}</p>
+                </div>
+                {% endif %}
+                
+                <a href="{{ url_for('admin.ver_grupo', grupo_id=grupo.id) }}" class="block w-full bg-secondary text-white text-center py-2 rounded-lg mt-3">
+                    Entrar al Grupo →
+                </a>
+                
+                <h3 class="font-semibold text-gray-700 mb-3">📚 Lecturas del grupo ({{ grupo.lecturas|length }})</h3>
+                
+                {% if grupo.lecturas %}
+                    <div class="space-y-3">
+                        {% for l in grupo.lecturas %}
+                        <div class="p-3 bg-cream rounded-lg">
+                            <p class="font-medium">{{ l.titulo }}</p>
+                            <p class="text-sm text-gray-600">Nivel {{ l.nivel }} • {{ l.tiempo }} min • +{{ l.puntos }} pts</p>
+                            <a href="{{ url_for('main.ver_lectura', lectura_id=l.id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                Leer →
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-gray-500">No hay lecturas en este grupo todavía</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12 bg-white rounded-xl shadow-md">
+            <p class="text-gray-600 mb-4">No perteneces a ningún grupo todavía</p>
+            <div class="space-y-3">
+                <a href="{{ url_for('admin.unidos_grupo') }}" class="block text-secondary hover:text-blue-600 font-medium">
+                    Unirse a un grupo →
+                </a>
+                {% if current_user.es_profesor() %}
+                <a href="{{ url_for('admin.crear_grupo') }}" class="block text-accent hover:text-accent font-medium">
+                    Crear un nuevo grupo →
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

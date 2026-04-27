@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Estado de Lectura - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('admin.ver_grupo', grupo_id=grupo.id) }}" class="text-secondary hover:text-blue-600">← Volver al Grupo</a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-primary mb-2">{{ lectura.titulo }}</h1>
+        
+        {% if lectura.cerrada %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <strong>Esta lectura está CERRADA</strong> - Los estudiantes ya no pueden completarla
+        </div>
+        {% elif lectura.fecha_cierre %}
+        <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+            <strong>Cerrará el:</strong> {{ lectura.fecha_cierre.strftime('%Y-%m-%d %H:%M') }}
+        </div>
+        {% endif %}
+
+        <div class="grid md:grid-cols-2 gap-8 mt-8">
+            <div>
+                <h2 class="text-xl font-semibold text-green-700 mb-4">Completados ({{ completados|length }})</h2>
+                {% if completados %}
+                <div class="space-y-3">
+                    {% for c in completados %}
+                    <div class="p-3 bg-green-50 rounded-lg flex justify-between">
+                        <span class="font-medium">{{ c.username }}</span>
+                        <span class="text-green-700">+{{ c.puntos }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">Nadie ha completado todavía</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h2 class="text-xl font-semibold text-red-700 mb-4">No Completados ({{ no_completados|length }})</h2>
+                {% if no_completados %}
+                <div class="space-y-3">
+                    {% for nc in no_completados %}
+                    <div class="p-3 bg-red-50 rounded-lg">
+                        <span class="font-medium">{{ nc.username }}</span>
+                        <span class="text-gray-500 text-sm ml-2">({{ nc.email }})</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">Todos completaron</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Actividades - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-primary mb-8">Actividades</h1>
+
+    {% if actividades %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for a in actividades %}
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="px-2 py-1 rounded text-xs font-medium 
+                        {% if a.tipo == 'sopa_letras'}bg-yellow-100 text-yellow-800
+                        {% elif a.tipo == 'seleccionar'}bg-blue-100 text-blue-800
+                        {% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ a.tipo }}
+                    </span>
+                    <span class="text-xs text-gray-500">Nivel {{ a.nivel }}</span>
+                </div>
+                <h3 class="text-lg font-semibold text-primary mb-2">{{ a.titulo }}</h3>
+                <p class="text-sm text-gray-600 mb-3">{{ a.tiempo_estimado }} min • +{{ a.puntos }} pts</p>
+                <a href="{{ url_for('main.resolver_actividad', actividad_id=a.id) }}" 
+                    class="block w-full bg-secondary text-white text-center py-2 rounded-lg">
+                    Resolver →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12 bg-white rounded-xl shadow-md">
+            <p class="text-gray-600">No hay actividades disponibles</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

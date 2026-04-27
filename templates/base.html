@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DeepRead - Lectura Crítica{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A5F',
+                        secondary: '#3B82F6',
+                        accent: '#F59E0B',
+                        cream: '#FEFCE8',
+                        dark: '#1F2937'
+                    },
+                    fontFamily: {
+                        heading: ['Poppins', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-cream min-h-screen flex flex-col">
+    {% block header %}
+    <header class="bg-primary text-white shadow-lg">
+        <nav class="container mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="{{ url_for('main.index') }}" class="text-2xl font-bold flex items-center gap-2">
+                <span class="text-accent">📚</span> DeepRead
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.dashboard') }}" class="hover:text-accent transition">Dashboard</a>
+                    <a href="{{ url_for('main.lecturas') }}" class="hover:text-accent transition">Lecturas</a>
+                    <a href="{{ url_for('main.progreso') }}" class="hover:text-accent transition">Mi Progreso</a>
+                    <a href="{{ url_for('main.mis_grupos') }}" class="hover:text-accent transition text-purple-300">Mis Grupos</a>
+                    {% if current_user.es_admin() %}
+                    <a href="{{ url_for('admin.ver_estadisticas') }}" class="hover:text-accent transition text-purple-300">Estadísticas</a>
+                    <a href="{{ url_for('admin.crear_lectura_publica') }}" class="hover:text-accent transition text-orange-300">+ Lectura</a>
+                    {% endif %}
+                    <div class="flex items-center gap-3 ml-4">
+                        <span class="text-accent">⭐ {{ current_user.puntos_totales }} pts</span>
+                        <span class="bg-accent text-primary px-2 py-1 rounded text-sm font-medium">Nivel {{ current_user.nivel_actual }}</span>
+                        <span class="bg-gray-600 px-2 py-1 rounded text-sm text-white">{{ current_user.rol }}</span>
+                        <a href="{{ url_for('auth.logout') }}" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm transition">Salir</a>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="hover:text-accent transition">Iniciar Sesión</a>
+                    <a href="{{ url_for('auth.register') }}" class="bg-accent text-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition">Registrarse</a>
+                {% endif %}
+            </div>
+            <button id="mobile-menu-btn" class="md:hidden text-2xl">☰</button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-primary-dark px-4 py-3">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.dashboard') }}" class="block py-2">Dashboard</a>
+                <a href="{{ url_for('main.lecturas') }}" class="block py-2">Lecturas</a>
+                <a href="{{ url_for('main.progreso') }}" class="block py-2">Mi Progreso</a>
+                <a href="{{ url_for('admin.unidos_grupo') }}" class="block py-2 text-green-400">Unirse a Grupo</a>
+                {% if current_user.es_profesor() %}
+                <a href="{{ url_for('admin.mis_grupos') }}" class="block py-2 text-blue-400">Mis Grupos</a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" class="block py-2 text-red-400">Cerrar Sesión</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" class="block py-2">Iniciar Sesión</a>
+                <a href="{{ url_for('auth.register') }}" class="block py-2 text-accent">Registrarse</a>
+            {% endif %}
+        </div>
+    </header>
+    {% endblock %}
+
+    {% block messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 py-4">
+                {% for category, message in messages %}
+                    <div class="p-4 rounded-lg mb-2 {% if category == 'success' %}bg-green-100 text-green-800 border border-green-300{% elif category == 'error' %}bg-red-100 text-red-800 border border-red-300{% else %}bg-blue-100 text-blue-800 border border-blue-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    {% endblock %}
+
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-primary text-white py-6 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm opacity-80">DeepRead - Mejora tu lectura crítica</p>
+            <p class="text-xs opacity-60 mt-2">Desarrollado para estudiantes</p>
+        </div>
+    </footer>
+
+    <script>
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Progreso - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-primary">Mi Progreso</h1>
+        <p class="text-gray-600">Revisa tu avance en DeepRead</p>
+    </div>
+
+    <!-- Stats Generales -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <div class="text-4xl mb-2">⭐</div>
+            <p class="text-3xl font-bold text-primary">{{ usuario.puntos_totales }}</p>
+            <p class="text-gray-600">Puntos Totales</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <div class="text-4xl mb-2">📈</div>
+            <p class="text-3xl font-bold text-primary">Nivel {{ usuario.nivel_actual }}</p>
+            <p class="text-gray-600">Nivel Actual</p>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-md p-6 text-center">
+            <div class="text-4xl mb-2">🔥</div>
+            <p class="text-3xl font-bold text-primary">{{ usuario.racha_dias }}</p>
+            <p class="text-gray-600">Días de Racha</p>
+        </div>
+    </div>
+
+    <!-- Niveles -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <h2 class="text-xl font-semibold text-primary mb-6">Niveles</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-lg border-2 {% if usuario.nivel_actual >= 1 %}border-green-500 bg-green-50{% else %}border-gray-200{% endif %}">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">📗</span>
+                    <span class="font-semibold">Nivel 1</span>
+                </div>
+                <p class="text-sm text-gray-600">Explorador</p>
+                <p class="text-sm text-gray-500">0-499 puntos</p>
+            </div>
+            <div class="p-4 rounded-lg border-2 {% if usuario.nivel_actual >= 2 %}border-yellow-500 bg-yellow-50{% else %}border-gray-200{% endif %}">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">📙</span>
+                    <span class="font-semibold">Nivel 2</span>
+                </div>
+                <p class="text-sm text-gray-600">Analista</p>
+                <p class="text-sm text-gray-500">500-1499 puntos</p>
+            </div>
+            <div class="p-4 rounded-lg border-2 {% if usuario.nivel_actual >= 3 %}border-red-500 bg-red-50{% else %}border-gray-200{% endif %}">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="text-2xl">📕</span>
+                    <span class="font-semibold">Nivel 3</span>
+                </div>
+                <p class="text-sm text-gray-600">Crítico</p>
+                <p class="text-sm text-gray-500">1500+ puntos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h2 class="text-xl font-semibold text-primary mb-6">Historial de Lecturas</h2>
+        {% if lecturas %}
+            <div class="space-y-3">
+                {% for item in lecturas %}
+                    <div class="flex items-center justify-between p-4 bg-cream rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-800">{{ item.titulo }}</p>
+                            <p class="text-sm text-gray-600">Nivel {{ item.nivel }} • {{ item.fecha.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-green-600 font-semibold">+{{ item.puntos }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600 text-center py-8">Aún no has completado ninguna lectura.</p>
+            <div class="text-center">
+                <a href="{{ url_for('main.lecturas') }}" class="text-secondary hover:text-blue-600 font-medium">
+                    Ver lecturas disponibles →
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

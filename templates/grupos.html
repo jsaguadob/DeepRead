@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Grupos - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-primary">Mis Grupos</h1>
+        <a href="{{ url_for('admin.crear_grupo') }}" class="bg-accent hover:opacity-90 text-primary px-4 py-2 rounded-lg font-medium">
+            + Crear Grupo
+        </a>
+    </div>
+
+    {% if grupos %}
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for grupo in grupos %}
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold text-primary mb-2">{{ grupo.nombre }}</h3>
+                <p class="text-gray-600 mb-4">{{ grupo.descripcion or 'Sin descripción' }}</p>
+                <div class="bg-cream p-3 rounded-lg mb-4">
+                    <p class="text-sm text-gray-600">Código:</p>
+                    <p class="text-2xl font-bold text-accent">{{ grupo.codigo_unico }}</p>
+                </div>
+                <a href="{{ url_for('admin.ver_grupo', grupo_id=grupo.id) }}" class="block w-full bg-secondary text-white text-center py-2 rounded-lg">
+                    Ver Grupo
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12 bg-white rounded-xl shadow-md">
+            <p class="text-gray-600 mb-4">Aún no has creado ningún grupo</p>
+            <a href="{{ url_for('admin.crear_grupo') }}" class="text-secondary hover:text-blue-600 font-medium">
+                Crear mi primer grupo →
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

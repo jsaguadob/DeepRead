@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Calificaciones - {{ grupo.nombre }} - DeepRead{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('admin.ver_grupo', grupo_id=grupo.id) }}" class="text-secondary hover:text-blue-600">← Volver al Grupo</a>
+    </div>
+
+    <h1 class="text-3xl font-bold text-primary mb-2">Calificaciones</h1>
+    <p class="text-gray-600 mb-8">{{ grupo.nombre }}</p>
+
+    {% if estudiantes %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
+            <table class="w-full">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th class="p-3 text-left">#</th>
+                        <th class="p-3 text-left">Estudiante</th>
+                        <th class="p-3 text-center">Nivel</th>
+                        <th class="p-3 text-center">Puntos</th>
+                        <th class="p-3 text-center">Lecturas</th>
+                        <th class="p-3 text-center">Quizzes</th>
+                        <th class="p-3 text-center">Actividades</th>
+                        <th class="p-3 text-center">Días activos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in range(1, estudiantes|length + 1) %}
+                    <tr class="border-b {% if e <= 3 %}bg-yellow-50{% endif %}">
+                        <td class="p-3">
+                            {% if e == 1 %}🥇{% elif e == 2 %}🥈{% elif e == 3 %}🥉{% else %}{{ e }}{% endif %}
+                        </td>
+                        <td class="p-3 font-medium {% if e <= 3 %}text-yellow-800{% endif %}">{{ estudiantes[e-1].username }}</td>
+                        <td class="p-3 text-center">
+                            <span class="px-2 py-1 rounded bg-green-100 text-green-800 text-sm">N{{ estudiantes[e-1].nivel }}</span>
+                        </td>
+                        <td class="p-3 text-center font-bold text-accent text-lg">{{ estudiantes[e-1].puntos }}</td>
+                        <td class="p-3 text-center">{{ estudiantes[e-1].lecturas_completadas }}</td>
+                        <td class="p-3 text-center">{{ estudiantes[e-1].quizzes_completados }}</td>
+                        <td class="p-3 text-center">{{ estudiantes[e-1].actividades_completadas }}</td>
+                        <td class="p-3 text-center text-gray-500">{{ estudiantes[e-1].dias_activos }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <h2 class="text-xl font-semibold text-primary mb-4">Detalle por Estudiante</h2>
+            {% for e in estudiantes %}
+            <div class="bg-white rounded-xl shadow-md p-6 mb-4">
+                <h3 class="text-lg font-semibold text-primary">{{ e.username }}</h3>
+                <p class="text-sm text-gray-600 mb-3">{{ e.email }} • {{ e.puntos }} puntos • Nivel {{ e.nivel }}</p>
+                
+                {% if e.lecturas %}
+                <div class="ml-4 mt-3">
+                    <p class="font-medium text-gray-700 mb-2">Lecturas completadas:</p>
+                    {% for l in e.lecturas %}
+                    <div class="flex justify-between py-2 border-b">
+                        <span>{{ l.titulo }}</span>
+                        <span class="font-medium">+{{ l.puntos }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 italic">Sin lecturas completadas</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-12 bg-white rounded-xl shadow-md">
+            <p class="text-gray-600">No hay estudiantes en este grupo</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
