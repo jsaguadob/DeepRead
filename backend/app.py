@@ -58,6 +58,11 @@ def create_app():
         db.create_all()
         from services.ai_client import iniciar
         iniciar(app.config.get('GEMINI_API_KEY', ''))
+
+        from models.lectura import Lectura
+        from seed_data import seed_database
+        if Lectura.query.first() is None:
+            seed_database()
         
         from sqlalchemy import text, inspect
         inspector = inspect(db.engine)
