@@ -40,6 +40,12 @@ def create_app():
     @app.route('/api/health')
     def health():
         return {'status': 'ok', 'version': '2.0'}
+
+    @app.route('/api/seed', methods=['POST'])
+    def seed():
+        from seed_data import seed_database
+        ok, msg = seed_database()
+        return {'ok': ok, 'message': msg}
     
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
@@ -104,3 +110,11 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
+
+
+import click
+@app.cli.command('seed')
+def seed_command():
+    from seed_data import seed_database
+    ok, msg = seed_database()
+    click.echo(msg)
