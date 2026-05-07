@@ -85,6 +85,15 @@ def create_app():
             pass
         
         try:
+            usuario_columns = [c['name'] for c in inspector.get_columns('usuarios')]
+            if 'consultas_ia_hoy' not in usuario_columns:
+                db.session.execute(text('ALTER TABLE usuarios ADD COLUMN consultas_ia_hoy INTEGER DEFAULT 0'))
+            if 'fecha_ultima_consulta' not in usuario_columns:
+                db.session.execute(text('ALTER TABLE usuarios ADD COLUMN fecha_ultima_consulta DATE'))
+        except:
+            pass
+        
+        try:
             db.session.commit()
         except:
             db.session.rollback()
