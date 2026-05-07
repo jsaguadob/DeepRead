@@ -104,17 +104,16 @@ def create_app():
         except:
             db.session.rollback()
     
+    import click
+    @app.cli.command('seed')
+    def seed_command():
+        from seed_data import seed_database
+        ok, msg = seed_database()
+        click.echo(msg)
+
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
     app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
-
-
-import click
-@app.cli.command('seed')
-def seed_command():
-    from seed_data import seed_database
-    ok, msg = seed_database()
-    click.echo(msg)
