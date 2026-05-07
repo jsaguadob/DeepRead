@@ -2,9 +2,14 @@ __pycache__/
 *.pyc
 *.pyo
 instance/
-.env
 *.db
+*.db-journal
+*.db-wal
+.env
 .DS_Store
 .vscode/
 .idea/
 *.log
+node_modules/
+dist/
+.vite/

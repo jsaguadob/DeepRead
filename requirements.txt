@@ -1,9 +1,0 @@
-flask
-flask-sqlalchemy
-flask-login
-flask-wtf
-wtforms
-gunicorn
-email-validator
-psycopg2-binary
-bcrypt
