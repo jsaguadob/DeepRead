@@ -192,12 +192,6 @@ def create_reading():
     return jsonify({'message': 'Lectura creada', 'lectura': lectura.to_dict()}), 201
 
 
-def _texto_es_valido(texto):
-    if not texto or len(texto.strip()) < 20:
-        return False
-    chars_alfa = sum(1 for c in texto if c.isalpha() or c.isspace())
-    return (chars_alfa / max(len(texto), 1)) > 0.1
-
 @readings_bp.route('/importar-archivo', methods=['POST'])
 @jwt_required()
 def importar_archivo():
@@ -242,8 +236,15 @@ def importar_archivo():
         archivo.save(tmp_path)
 
         texto = extraer_texto_archivo(tmp_path, ext)
-        if not _texto_es_valido(texto):
-            return jsonify({'error': 'No se pudo extraer texto válido del archivo. Asegúrate de que no sea un PDF escaneado o esté corrupto.'}), 400
+        if not texto:
+            return jsonify({'error': 'No se pudo extraer texto del archivo. El PDF podría ser escaneado (imágenes, sin texto seleccionable). Prueba con un PDF con texto real.'}), 400
+        limpio = texto.strip()
+        if len(limpio) < 15:
+            return jsonify({'error': f'El archivo solo tiene {len(limpio)} caracteres de texto. Asegúrate de que el PDF tenga texto seleccionable, no sean solo imágenes.'}), 400
+        chars_alfa = sum(1 for c in limpio if c.isalpha() or c.isspace())
+        ratio = chars_alfa / max(len(limpio), 1)
+        if ratio < 0.05:
+            return jsonify({'error': f'El texto extraído ({len(limpio)} chars, {ratio:.1%} alfabético) no parece contenido válido. El PDF podría estar protegido o ser escaneado.'}), 400
 
         if necesita_ia and esta_listo():
             resultado_ia = procesar_texto_con_ia(texto, cantidad_preguntas)
