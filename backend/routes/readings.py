@@ -196,7 +196,7 @@ def _texto_es_valido(texto):
     if not texto or len(texto.strip()) < 20:
         return False
     chars_alfa = sum(1 for c in texto if c.isalpha() or c.isspace())
-    return (chars_alfa / max(len(texto), 1)) > 0.5
+    return (chars_alfa / max(len(texto), 1)) > 0.1
 
 @readings_bp.route('/importar-archivo', methods=['POST'])
 @jwt_required()
