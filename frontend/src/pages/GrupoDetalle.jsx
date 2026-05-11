@@ -139,7 +139,38 @@ export default function GrupoDetalle() {
             </div>
 
             {showCreateLectura && (
-              <form onSubmit={handleCreateLectura} className="mb-6 p-4 bg-frost-50 rounded-xl space-y-3">
+              <div className="mb-6 p-4 bg-frost-50 rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-void-700">Nueva Lectura</h3>
+                  <button onClick={() => setShowImport(true)}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium transition">
+                    <FontAwesomeIcon icon={faFileUpload} className="mr-1" />Importar archivo
+                  </button>
+                </div>
+
+                <div
+                  onDragOver={e => e.preventDefault()}
+                  onDrop={e => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file && ['.pdf', '.docx', '.txt'].some(ext => file.name.toLowerCase().endsWith(ext))) {
+                      setShowImport(true);
+                    }
+                  }}
+                  className="border-2 border-dashed border-frost-300 rounded-xl p-4 text-center cursor-pointer hover:border-teal-400 transition mb-2"
+                  onClick={() => setShowImport(true)}>
+                  <FontAwesomeIcon icon={faFileUpload} className="text-void-300 text-lg mb-1" />
+                  <p className="text-xs text-void-400">Arrastra un archivo o haz clic para importar</p>
+                  <p className="text-[10px] text-void-300">PDF, DOCX o TXT</p>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-void-400">
+                  <div className="flex-1 border-t border-frost-200" />
+                  <span>o escribe manualmente</span>
+                  <div className="flex-1 border-t border-frost-200" />
+                </div>
+
+              <form onSubmit={handleCreateLectura} className="space-y-3">
                 <input type="text" placeholder="Título" value={form.titulo} onChange={e => update('titulo', e.target.value)} required
                   className="w-full px-3 py-2 border border-frost-200 rounded-xl bg-white text-sm" />
                 <textarea placeholder="Contenido" value={form.contenido} onChange={e => update('contenido', e.target.value)} required rows={4}
