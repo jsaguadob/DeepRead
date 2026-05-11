@@ -227,7 +227,8 @@ def extraer_texto_con_ocr(ruta_pdf):
 
 
 def _vincular_texto_valido(texto):
-    palabras = texto.split()
+    import re
+    palabras = [re.sub(r'[^\wáéíóúüñÁÉÍÓÚÜÑ]', '', p) for p in texto.split() if re.sub(r'[^\wáéíóúüñÁÉÍÓÚÜÑ]', '', p)]
     if len(palabras) < 5:
         return False
     palabras_unicas = len(set(p.lower() for p in palabras if p.isalpha()))

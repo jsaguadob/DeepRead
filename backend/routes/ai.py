@@ -164,7 +164,7 @@ def api_chat():
             # Buscar la lectura de esta pregunta
             lectura_preg = None
             for l in lecturas:
-                if any(str(q.id) == str(pid) for q in (preguntas_por_lectura.get(str(l.id), []))):
+                if any(str(q['id']) == str(pid) for q in (preguntas_por_lectura.get(str(l.id), []))):
                     lectura_preg = l.titulo
                     break
             # Simple: buscar en preguntas_por_lectura
