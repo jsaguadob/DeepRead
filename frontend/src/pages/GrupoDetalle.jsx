@@ -199,6 +199,7 @@ export default function GrupoDetalle() {
                   {loading ? 'Creando...' : 'Crear Lectura'}
                 </button>
               </form>
+              </div>
             )}
 
             {lecturas.length === 0 ? (
