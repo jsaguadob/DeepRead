@@ -200,6 +200,35 @@ def extraer_texto_archivo(ruta_archivo, extension):
         return None
 
 
+def extraer_texto_con_ocr(ruta_pdf):
+    if not modelo:
+        return None
+    try:
+        import fitz
+        import io
+        doc = fitz.open(ruta_pdf)
+        paginas = min(len(doc), 10)
+        partes = []
+        for i in range(paginas):
+            pix = doc[i].get_pixmap(dpi=200)
+            img_bytes = pix.tobytes("png")
+            img_data = {"mime_type": "image/png", "data": img_bytes}
+            partes.append(img_data)
+        doc.close()
+
+        if not partes:
+            return None
+
+        prompt = "Extrae TODO el texto de esta imagen de PDF. Responde SOLO con el texto exacto, sin comentarios ni explicaciones."
+        contenido = [prompt] + partes
+        respuesta = modelo.generate_content(contenido)
+        texto = respuesta.text.strip()
+        return texto if len(texto) > 20 else None
+    except Exception as e:
+        print(f"[AI] Error en OCR: {e}")
+        return None
+
+
 def _vincular_texto_valido(texto):
     palabras = texto.split()
     if len(palabras) < 5:
