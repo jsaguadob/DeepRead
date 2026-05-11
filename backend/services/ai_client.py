@@ -201,27 +201,24 @@ def extraer_texto_archivo(ruta_archivo, extension):
 
 
 def extraer_texto_con_ocr(ruta_pdf):
-    if not modelo:
+    if not cliente:
         return None
     try:
         import fitz
-        import io
         doc = fitz.open(ruta_pdf)
-        paginas = min(len(doc), 10)
+        paginas = min(len(doc), 5)
         partes = []
         for i in range(paginas):
             pix = doc[i].get_pixmap(dpi=200)
             img_bytes = pix.tobytes("png")
-            img_data = {"mime_type": "image/png", "data": img_bytes}
-            partes.append(img_data)
+            partes.append({"mime_type": "image/png", "data": img_bytes})
         doc.close()
-
         if not partes:
             return None
 
-        prompt = "Extrae TODO el texto de esta imagen de PDF. Responde SOLO con el texto exacto, sin comentarios ni explicaciones."
-        contenido = [prompt] + partes
-        respuesta = modelo.generate_content(contenido)
+        modelo_vision = cliente.GenerativeModel('models/gemini-2.5-flash')
+        prompt = "Extrae TODO el texto de todas estas imágenes de PDF en orden. Responde SOLO con el texto completo combinado, sin comentarios ni explicaciones."
+        respuesta = modelo_vision.generate_content([prompt] + partes)
         texto = respuesta.text.strip()
         return texto if len(texto) > 20 else None
     except Exception as e:
