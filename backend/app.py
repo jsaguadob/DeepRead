@@ -46,6 +46,12 @@ def create_app():
         from seed_data import seed_database
         ok, msg = seed_database()
         return {'ok': ok, 'message': msg}
+
+    @app.route('/api/seed-mocap', methods=['POST'])
+    def seed_mocap():
+        from seed_mocap import seed_mocap
+        ok, msg = seed_mocap()
+        return {'ok': ok, 'message': msg}
     
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
