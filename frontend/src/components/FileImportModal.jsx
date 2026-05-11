@@ -12,7 +12,9 @@ export default function FileImportModal({ onClose, onCreated, misGrupos }) {
   const inputRef = useRef(null);
   const [archivo, setArchivo] = useState(null);
   const [categoria, setCategoria] = useState('');
-  const [grupoId, setGrupoId] = useState('');
+  const [grupoId, setGrupoId] = useState(
+    misGrupos?.length === 1 ? String(misGrupos[0].id) : ''
+  );
   const [cantidadPreguntas, setCantidadPreguntas] = useState(5);
   const [generarQuiz, setGenerarQuiz] = useState(true);
   const [procesando, setProcesando] = useState(false);
