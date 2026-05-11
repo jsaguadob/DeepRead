@@ -12,10 +12,15 @@ export default function GrupoCalificaciones() {
   const [expanded, setExpanded] = useState(null);
   const [data, setData] = useState(null);
 
+  const [error, setError] = useState(null);
+
   useEffect(() => {
-    groups.getGrades(id).then(res => setData(res.data)).catch(() => {});
+    groups.getGrades(id).then(res => setData(res.data)).catch(err => {
+      setError(err.response?.data?.error || 'Error al cargar calificaciones');
+    });
   }, [id]);
 
+  if (error) return <div className="p-8 text-center text-red-500 font-medium">{error}</div>;
   if (!data) return <div className="p-8 text-center text-void-400">Cargando...</div>;
 
   return (
