@@ -28,8 +28,8 @@ def seed_mocap():
 
     # --- PROFESOR ---
     profesor = Usuario(
-        username='profesor_lacolina',
-        email='profesor' + DOMAIN,
+        username='carlos.mendoza',
+        email='carlos.mendoza' + DOMAIN,
         password_hash=pw_hash,
         rol='profesor',
         tipo_usuario='institucional',
@@ -162,30 +162,35 @@ def seed_mocap():
             lecturas_creadas.append((lectura, preguntas_ids, grupo))
 
     # --- ESTUDIANTES ---
-    nombres = [
-        'Sofia', 'Valentina', 'Isabella', 'Camila', 'Gabriela',
-        'Samuel', 'Mateo', 'Santiago', 'Sebastian', 'Nicolas',
-        'Laura', 'Maria', 'Daniela', 'Ana', 'Carolina',
-        'Andres', 'Felipe', 'Diego', 'Alejandro', 'Juan',
-        'Paula', 'Mariana', 'Juliana', 'Manuela', 'Ximena',
-        'Carlos', 'Miguel', 'David', 'Jose', 'Luis', 'Pedro'
+    estudiantes_data = [
+        ('Sofia', 'Rodriguez'), ('Valentina', 'Gomez'), ('Isabella', 'Martinez'),
+        ('Camila', 'Lopez'), ('Gabriela', 'Gonzalez'), ('Samuel', 'Perez'),
+        ('Mateo', 'Ramirez'), ('Santiago', 'Sanchez'), ('Sebastian', 'Torres'),
+        ('Nicolas', 'Flores'), ('Laura', 'Diaz'), ('Maria', 'Moreno'),
+        ('Daniela', 'Castro'), ('Ana', 'Ortiz'),
+        # Once B
+        ('Carolina', 'Morales'), ('Andres', 'Silva'), ('Felipe', 'Cruz'),
+        ('Diego', 'Reyes'), ('Alejandro', 'Ramos'), ('Juan', 'Vargas'),
+        ('Paula', 'Rodriguez'), ('Mariana', 'Gomez'), ('Juliana', 'Martinez'),
+        ('Manuela', 'Lopez'), ('Ximena', 'Gonzalez'), ('Carlos', 'Perez'),
+        ('Miguel', 'Ramirez'), ('David', 'Sanchez'), ('Jose', 'Torres'),
+        ('Luis', 'Flores'), ('Pedro', 'Diaz')
     ]
-    apellidos = ['Rodriguez', 'Gomez', 'Martinez', 'Lopez', 'Gonzalez',
-                 'Perez', 'Ramirez', 'Sanchez', 'Torres', 'Flores',
-                 'Diaz', 'Moreno', 'Castro', 'Ortiz', 'Morales',
-                 'Silva', 'Cruz', 'Reyes', 'Ramos', 'Vargas']
 
-    def username_from_name(nombre, apellido, idx):
-        return (nombre[:4] + apellido[:4] + str(idx)).lower()
+    def sanitizar(s):
+        import unicodedata
+        s = s.lower()
+        s = ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+        return s
 
     grupo_a_estudiantes = []
     grupo_b_estudiantes = []
 
-    for i in range(31):
-        nombre = nombres[i]
-        apellido = apellidos[i % len(apellidos)]
-        username = username_from_name(nombre, apellido, i + 1)
-        email = f'estudiante{i+1}' + DOMAIN
+    for i, (nombre, apellido) in enumerate(estudiantes_data):
+        sn = sanitizar(nombre)
+        sa = sanitizar(apellido)
+        username = f'{sn}.{sa}'
+        email = f'{sn}.{sa}{DOMAIN}'
 
         estudiante = Usuario(
             username=username,
