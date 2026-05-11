@@ -47,11 +47,12 @@ def generar_quiz(contenido, nivel, cantidad=5):
 
     prompt = f"""Eres un profesor experto en comprensión lectora. Genera exactamente {cantidad} preguntas de opción múltiple para una lectura de nivel {nivel} (1=fácil, 2=medio, 3=avanzado).
 
-REGLAS ESTRICTAS:
-- Cada pregunta debe basarse ESTRICTAMENTE en el texto proporcionado. NO inventes hechos, datos o conceptos que no aparezcan en el texto.
-- Las opciones incorrectas deben ser distracciones verosímiles pero basadas en información que SÍ aparezca en el texto (malinterpretada o fuera de contexto).
-- La respuesta correcta debe poder verificarse explícitamente en el texto.
-- Cada pregunta debe tener 4 opciones (a, b, c, d), una respuesta correcta (solo la letra: a, b, c o d) y una explicación breve que CITE la parte del texto donde se encuentra la respuesta.
+REGLAS ESTRICTAS (violar estas reglas hará que el examen no sirva):
+- Cada pregunta debe basarse ESTRICTAMENTE en el texto. NO inventes NADA.
+- La respuesta correcta debe poder verificarse explícitamente en el texto proporcionado abajo.
+- Las opciones incorrectas deben ser distracciones basadas en información del texto.
+- NO uses palabras como "embarazo", "gato", "una vez" ni ningún concepto que NO esté en el texto.
+- Si el texto es muy corto y no permite generar {cantidad} preguntas, genera solo las que puedas (mínimo 1).
 
 Responde ÚNICAMENTE con un array JSON válido, sin texto adicional:
 [
@@ -199,9 +200,19 @@ def extraer_texto_archivo(ruta_archivo, extension):
         return None
 
 
+def _vincular_texto_valido(texto):
+    palabras = texto.split()
+    if len(palabras) < 5:
+        return False
+    palabras_unicas = len(set(p.lower() for p in palabras if p.isalpha()))
+    return palabras_unicas >= 4
+
 def procesar_texto_con_ia(texto, cantidad_preguntas=5):
     if not modelo:
         return {'error': 'IA no configurada'}
+
+    if not _vincular_texto_valido(texto):
+        return {'error': 'El texto extraído no tiene suficiente contenido coherente'}
 
     texto_recortado = texto[:5000]
     prompt = f"""Eres un asistente que prepara material educativo a partir de texto extraído de un archivo.
@@ -209,40 +220,47 @@ def procesar_texto_con_ia(texto, cantidad_preguntas=5):
 Texto extraído:
 {texto_recortado}
 
-Con base en este texto, genera un JSON con la siguiente estructura exacta:
+INSTRUCCIÓN CRÍTICA: Revisa el texto cuidadosamente. Si el texto no tiene sentido, parece basura, son palabras sueltas sin coherencia, o no es contenido educativo válido, responde ÚNICAMENTE con este JSON exacto:
+{{"error": "texto_no_valido", "titulo_sugerido": "{texto[:50].strip()}", "contenido_limpio": "{texto[:5000]}", "nivel_sugerido": 1, "preguntas": []}}
+
+SOLO si el texto es contenido educativo coherente y válido (artículo, ensayo, cuento, texto académico, etc.),
+genera un JSON con la siguiente estructura exacta:
 {{
-  "titulo_sugerido": "título corto y descriptivo",
+  "titulo_sugerido": "título corto y descriptivo basado ESTRICTAMENTE en el texto",
   "contenido_limpio": "el texto limpiado (sin encabezados ni pies de página, conservando solo el contenido útil)",
   "nivel_sugerido": 2,
   "preguntas": [
     {{
-      "pregunta": "texto de la pregunta",
+      "pregunta": "texto de la pregunta basada ESTRICTAMENTE en el texto",
       "opcion_a": "texto opción a",
       "opcion_b": "texto opción b",
       "opcion_c": "texto opción c",
       "opcion_d": "texto opción d",
       "respuesta_correcta": "a",
-      "explicacion": "explicación breve citando el texto"
+      "explicacion": "explicación breve CITANDO el texto"
     }}
   ]
 }}
 
-REGLAS:
-- El nivel_sugerido debe ser 1 (fácil), 2 (medio) o 3 (avanzado) según la complejidad del texto.
-- Genera exactamente {cantidad_preguntas} preguntas de opción múltiple basadas ESTRICTAMENTE en el texto.
-- NO inventes información que no esté en el texto.
-- La respuesta correcta debe poder verificarse en el texto.
+REGLAS ESTRICTAS:
+- NO inventes NADA. Cada pregunta y respuesta debe basarse ESTRICTAMENTE en el texto proporcionado.
+- NO uses palabras, temas o conceptos que NO aparezcan en el texto.
+- Si el texto no permite generar la cantidad solicitada, genera menos preguntas pero todas REALES.
+- Las opciones incorrectas deben ser DISTRACCIONES basadas en información del texto.
 - Responde ÚNICAMENTE con el JSON, sin texto adicional."""
 
     try:
         respuesta = modelo.generate_content(prompt)
         data = _extraer_json(respuesta.text)
-        if data and isinstance(data, dict) and 'titulo_sugerido' in data:
-            if 'contenido_limpio' not in data:
-                data['contenido_limpio'] = texto[:5000]
-            if 'preguntas' not in data:
-                data['preguntas'] = []
-            return data
+        if data and isinstance(data, dict):
+            if data.get('error') == 'texto_no_valido':
+                return {'error': 'El texto no es contenido educativo válido'}
+            if 'titulo_sugerido' in data:
+                if 'contenido_limpio' not in data:
+                    data['contenido_limpio'] = texto[:5000]
+                if 'preguntas' not in data:
+                    data['preguntas'] = []
+                return data
         return {'error': 'No se pudo interpretar la respuesta', 'raw': respuesta.text}
     except Exception as e:
         return {'error': f'Error al procesar: {str(e)}'}

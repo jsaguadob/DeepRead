@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBook, faUser, faEnvelope, faLock, faEye, faEyeSlash, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
+import { faBook, faUser, faEnvelope, faLock, faEye, faEyeSlash, faGraduationCap, faChalkboardTeacher, faUserGraduate } from '@fortawesome/free-solid-svg-icons';
 
 export default function Register() {
-  const [form, setForm] = useState({ username: '', email: '', password: '', tipo_usuario: 'gratuito' });
+  const [form, setForm] = useState({ username: '', email: '', password: '', tipo_usuario: 'gratuito', rol: 'estudiante' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,6 +13,14 @@ export default function Register() {
   const navigate = useNavigate();
 
   const update = (field, value) => setForm(f => ({ ...f, [field]: value }));
+
+  const handleTipoChange = (tipo) => {
+    setForm(f => ({
+      ...f,
+      tipo_usuario: tipo,
+      rol: tipo === 'gratuito' ? 'estudiante' : f.rol
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,7 +78,7 @@ export default function Register() {
             <div>
               <label className="block text-sm font-medium text-void-600 mb-1.5">Tipo de Cuenta</label>
               <div className="grid grid-cols-2 gap-2">
-                <button type="button" onClick={() => update('tipo_usuario', 'gratuito')}
+                <button type="button" onClick={() => handleTipoChange('gratuito')}
                   className={`py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                     form.tipo_usuario === 'gratuito'
                       ? 'border-teal-500 bg-teal-50 text-teal-700'
@@ -78,7 +86,7 @@ export default function Register() {
                   }`}>
                   Gratuito
                 </button>
-                <button type="button" onClick={() => update('tipo_usuario', 'institucional')}
+                <button type="button" onClick={() => handleTipoChange('institucional')}
                   className={`py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
                     form.tipo_usuario === 'institucional'
                       ? 'border-iris-400 bg-iris-50 text-iris-700'
@@ -89,8 +97,32 @@ export default function Register() {
                 </button>
               </div>
               {form.tipo_usuario === 'institucional' && (
-                <p className="text-xs text-void-400 mt-1">Requiere email terminado en .edu</p>
+                <p className="text-xs text-void-400 mt-1">Requiere email .edu (ej: usuario@uni.edu.mx)</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-void-600 mb-1.5">Rol</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => update('rol', 'estudiante')}
+                  className={`py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
+                    form.rol === 'estudiante'
+                      ? 'border-teal-500 bg-teal-50 text-teal-700'
+                      : 'border-frost-200 bg-frost-50 text-void-400'
+                  }`}>
+                  <FontAwesomeIcon icon={faUserGraduate} className="mr-1.5" />
+                  Estudiante
+                </button>
+                <button type="button" onClick={() => update('rol', 'profesor')}
+                  className={`py-3 px-4 rounded-xl border-2 transition font-medium text-sm ${
+                    form.rol === 'profesor'
+                      ? 'border-flare-500 bg-flare-50 text-flare-700'
+                      : 'border-frost-200 bg-frost-50 text-void-400'
+                  }`}>
+                  <FontAwesomeIcon icon={faChalkboardTeacher} className="mr-1.5" />
+                  Profesor
+                </button>
+              </div>
             </div>
 
             <div>

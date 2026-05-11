@@ -1,19 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { groups, readings } from '../services/api';
 import { toast } from '../components/Toast';
+import FileImportModal from '../components/FileImportModal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faUsers, faBook, faGraduationCap, faPlus, faTimes, faLink, faChartBar, faQuestionCircle, faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faUsers, faBook, faGraduationCap, faPlus, faTimes, faLink, faChartBar, faQuestionCircle, faLock, faLockOpen, faFileUpload, faClone } from '@fortawesome/free-solid-svg-icons';
 
 export default function GrupoDetalle() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [grupo, setGrupo] = useState(null);
   const [miembros, setMiembros] = useState([]);
   const [lecturas, setLecturas] = useState([]);
   const [esDueno, setEsDueno] = useState(false);
   const [showCreateLectura, setShowCreateLectura] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [showReplicar, setShowReplicar] = useState(null);
+  const [misGrupos, setMisGrupos] = useState([]);
   const [form, setForm] = useState({ titulo: '', contenido: '', nivel: 1, tiempo_estimado_minutos: 10, puntos_recompensa: 100, categoria: '', intentos_maximos: 3, fecha_cierre: '' });
   const [loading, setLoading] = useState(false);
 
@@ -28,6 +33,7 @@ export default function GrupoDetalle() {
       .catch(() => {
         toast({ type: 'error', mesteal: 'Grupo no encontrado' });
       });
+    groups.list().then(res => setMisGrupos(res.data.grupos || [])).catch(() => {});
   }, [id]);
 
   const handleCreateLectura = async (e) => {
@@ -49,10 +55,10 @@ export default function GrupoDetalle() {
     }
   };
 
-  const handleRemoveMiris = async (userId) => {
+  const handleRemoveMember = async (userId) => {
     if (!confirm('¿Eliminar este miembro?')) return;
     try {
-      await groups.removeMiris(id, userId);
+      await groups.removeMember(id, userId);
       toast({ mesteal: 'Miembro eliminado' });
       groups.get(id).then(r => setMiembros(r.data.miembros));
     } catch (err) {
@@ -68,6 +74,22 @@ export default function GrupoDetalle() {
     } catch (err) {
       toast({ type: 'error', mesteal: 'Error al cambiar estado' });
     }
+  };
+
+  const handleReplicar = async (lecturaId, grupoDestinoId) => {
+    try {
+      const res = await readings.replicar(lecturaId, { grupo_id: grupoDestinoId });
+      toast({ mesteal: res.data.message });
+      setShowReplicar(null);
+      groups.get(id).then(r => setLecturas(r.data.lecturas));
+    } catch (err) {
+      toast({ type: 'error', mesteal: err.response?.data?.error || 'Error al replicar' });
+    }
+  };
+
+  const handleImportCreated = (lectura) => {
+    navigate(`/lecturas/${lectura.id}`);
+    groups.get(id).then(r => setLecturas(r.data.lecturas));
   };
 
   if (!grupo) return <div className="p-8 text-center text-void-400">Cargando...</div>;
@@ -103,10 +125,16 @@ export default function GrupoDetalle() {
                 <FontAwesomeIcon icon={faBook} className="text-teal-500" /> Lecturas ({lecturas.length})
               </h2>
               {esDueno && (
-                <button onClick={() => setShowCreateLectura(!showCreateLectura)}
-                  className="text-sm bg-iris-500 hover:bg-iris-600 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
-                  <FontAwesomeIcon icon={faPlus} /> {showCreateLectura ? 'Cancelar' : 'Nueva'}
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => setShowImport(true)}
+                    className="text-sm bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                    <FontAwesomeIcon icon={faFileUpload} /> Importar
+                  </button>
+                  <button onClick={() => setShowCreateLectura(!showCreateLectura)}
+                    className="text-sm bg-iris-500 hover:bg-iris-600 text-white px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                    <FontAwesomeIcon icon={faPlus} /> {showCreateLectura ? 'Cancelar' : 'Nueva'}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -165,6 +193,11 @@ export default function GrupoDetalle() {
                     <div className="flex gap-1">
                       {esDueno && (
                         <>
+                          <button onClick={() => setShowReplicar(showReplicar === l.id ? null : l.id)}
+                            className="text-void-400 hover:text-teal-600 p-1.5 hover:bg-teal-50 rounded-lg transition"
+                            title="Replicar a otro grupo">
+                            <FontAwesomeIcon icon={faClone} />
+                          </button>
                           <button onClick={() => handleToggleCierre(l.id, l.cerrada ? 'reabrir' : 'cerrar')}
                             className={`p-1.5 rounded-lg transition ${l.cerrada ? 'text-teal-500 hover:bg-teal-50' : 'text-red-400 hover:bg-red-50'}`}
                             title={l.cerrada ? 'Reabrir' : 'Cerrar'}>
@@ -183,6 +216,27 @@ export default function GrupoDetalle() {
                         <FontAwesomeIcon icon={faChartBar} />
                       </Link>
                     </div>
+                    {showReplicar === l.id && esDueno && (
+                      <div className="mt-2 p-2 bg-frost-50 rounded-lg border border-frost-200">
+                        <p className="text-xs text-void-500 mb-1">Replicar a grupo:</p>
+                        <div className="flex gap-2">
+                          <select id={`replicar-select-${l.id}`}
+                            className="flex-1 px-2 py-1.5 border border-frost-200 rounded-lg bg-white text-sm">
+                            <option value="">Seleccionar...</option>
+                            {misGrupos.filter(g => g.id !== parseInt(id)).map(g => (
+                              <option key={g.id} value={g.id}>{g.nombre}</option>
+                            ))}
+                          </select>
+                          <button onClick={() => {
+                            const sel = document.getElementById(`replicar-select-${l.id}`);
+                            if (sel.value) handleReplicar(l.id, parseInt(sel.value));
+                          }}
+                            className="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                            Replicar
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -221,7 +275,7 @@ export default function GrupoDetalle() {
                       m.rol === 'profesor' ? 'bg-void-50 text-void-600' : 'bg-teal-50 text-teal-600'
                     }`}>{m.rol}</span>
                     {esDueno && m.rol !== 'profesor' && (
-                      <button onClick={() => handleRemoveMiris(m.id)}
+                      <button onClick={() => handleRemoveMember(m.id)}
                         className="text-red-400 hover:text-red-600 text-xs p-1 hover:bg-red-50 rounded transition">
                         <FontAwesomeIcon icon={faTimes} />
                       </button>
@@ -238,6 +292,14 @@ export default function GrupoDetalle() {
           </div>
         </div>
       </div>
+
+      {showImport && (
+        <FileImportModal
+          onClose={() => setShowImport(false)}
+          onCreated={handleImportCreated}
+          misGrupos={[{ id: parseInt(id), nombre: grupo?.nombre }]}
+        />
+      )}
     </div>
   );
 }

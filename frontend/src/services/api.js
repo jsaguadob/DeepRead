@@ -40,6 +40,7 @@ export const readings = {
   importarArchivo: (formData) => api.post('/lecturas/importar-archivo', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  replicar: (id, data) => api.post(`/lecturas/${id}/replicar`, data),
 };
 
 export const quizzes = {

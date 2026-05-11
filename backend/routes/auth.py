@@ -30,12 +30,17 @@ def register():
     if Usuario.query.filter_by(email=email).first():
         return jsonify({'error': 'El email ya está registrado'}), 400
     
-    if tipo == 'institucional' and not email.endswith('.edu'):
-        return jsonify({'error': 'Email institucional debe terminar en .edu'}), 400
+    es_edu = email.endswith('.edu') or '.edu.' in email
+    if tipo == 'institucional' and not es_edu:
+        return jsonify({'error': 'Email institucional debe ser .edu (ej: usuario@universidad.edu o usuario@uni.edu.mx)'}), 400
     
     password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    rol = 'profesor' if tipo == 'institucional' else 'estudiante'
+    rol = data.get('rol', '')
+    if not rol:
+        rol = 'profesor' if tipo == 'institucional' else 'estudiante'
+    elif rol not in ('estudiante', 'profesor'):
+        return jsonify({'error': 'Rol inválido. Debe ser estudiante o profesor.'}), 400
     
     usuario = Usuario(
         username=username,

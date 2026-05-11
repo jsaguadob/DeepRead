@@ -192,6 +192,12 @@ def create_reading():
     return jsonify({'message': 'Lectura creada', 'lectura': lectura.to_dict()}), 201
 
 
+def _texto_es_valido(texto):
+    if not texto or len(texto.strip()) < 20:
+        return False
+    chars_alfa = sum(1 for c in texto if c.isalpha() or c.isspace())
+    return (chars_alfa / max(len(texto), 1)) > 0.5
+
 @readings_bp.route('/importar-archivo', methods=['POST'])
 @jwt_required()
 def importar_archivo():
@@ -208,19 +214,20 @@ def importar_archivo():
     if archivo.filename == '':
         return jsonify({'error': 'Archivo vacío'}), 400
 
-    if not esta_listo():
-        return jsonify({'error': 'IA no configurada'}), 503
-
     ext = os.path.splitext(archivo.filename)[1].lower()
     if ext not in ('.pdf', '.docx', '.txt'):
         return jsonify({'error': 'Formato no soportado. Usa PDF, DOCX o TXT.'}), 400
 
     cantidad_preguntas = int(request.form.get('cantidad_preguntas', 5))
+    necesita_ia = cantidad_preguntas > 0
     nivel_forzado = request.form.get('nivel')
     categoria = request.form.get('categoria', '')
     grupo_id = request.form.get('grupo_id')
     if grupo_id:
         grupo_id = int(grupo_id)
+
+    if necesita_ia and not esta_listo():
+        return jsonify({'error': 'IA no configurada. Para subir sin generar preguntas, desmarca "Generar preguntas automáticamente".'}), 503
 
     if user.es_profesor() and not user.es_admin():
         if not grupo_id:
@@ -229,28 +236,32 @@ def importar_archivo():
         if not grupo or grupo.profesor_id != user.id:
             return jsonify({'error': 'No eres el profesor de este grupo'}), 403
 
-    # Guardar archivo temporal
     fd, tmp_path = tempfile.mkstemp(suffix=ext)
     os.close(fd)
     try:
         archivo.save(tmp_path)
 
         texto = extraer_texto_archivo(tmp_path, ext)
-        if not texto or len(texto.strip()) < 20:
-            return jsonify({'error': 'No se pudo extraer texto del archivo o está vacío'}), 400
+        if not _texto_es_valido(texto):
+            return jsonify({'error': 'No se pudo extraer texto válido del archivo. Asegúrate de que no sea un PDF escaneado o esté corrupto.'}), 400
 
-        resultado_ia = procesar_texto_con_ia(texto, cantidad_preguntas)
-        if 'error' in resultado_ia:
-            # Fallback: usar datos básicos sin IA
+        if necesita_ia and esta_listo():
+            resultado_ia = procesar_texto_con_ia(texto, cantidad_preguntas)
+            if 'error' in resultado_ia:
+                titulo = os.path.splitext(archivo.filename)[0][:200]
+                contenido = texto[:50000]
+                nivel = int(nivel_forzado) if nivel_forzado else 2
+                preguntas_data = []
+            else:
+                titulo = resultado_ia.get('titulo_sugerido', os.path.splitext(archivo.filename)[0])[:200]
+                contenido = resultado_ia.get('contenido_limpio', texto)[:50000]
+                nivel = int(nivel_forzado) if nivel_forzado else int(resultado_ia.get('nivel_sugerido', 2))
+                preguntas_data = resultado_ia.get('preguntas', [])
+        else:
             titulo = os.path.splitext(archivo.filename)[0][:200]
             contenido = texto[:50000]
             nivel = int(nivel_forzado) if nivel_forzado else 2
             preguntas_data = []
-        else:
-            titulo = resultado_ia.get('titulo_sugerido', os.path.splitext(archivo.filename)[0])[:200]
-            contenido = resultado_ia.get('contenido_limpio', texto)[:50000]
-            nivel = int(nivel_forzado) if nivel_forzado else int(resultado_ia.get('nivel_sugerido', 2))
-            preguntas_data = resultado_ia.get('preguntas', [])
 
         if user.es_profesor() and not user.es_admin():
             es_publica = False
@@ -355,6 +366,72 @@ def delete_reading(lectura_id):
     db.session.commit()
     
     return jsonify({'message': 'Lectura eliminada'})
+
+
+@readings_bp.route('/<int:lectura_id>/replicar', methods=['POST'])
+@jwt_required()
+def replicar_lectura(lectura_id):
+    user = get_current_user()
+    if not user.es_admin() and not user.es_profesor():
+        return jsonify({'error': 'No tienes permiso'}), 403
+
+    original = db.session.get(Lectura, lectura_id)
+    if not original:
+        return jsonify({'error': 'Lectura no encontrada'}), 404
+
+    if user.es_profesor() and not user.es_admin() and original.profesor_id != user.id:
+        return jsonify({'error': 'No eres el dueño de esta lectura'}), 403
+
+    data = request.get_json()
+    grupo_destino_id = data.get('grupo_id')
+    if not grupo_destino_id:
+        return jsonify({'error': 'grupo_id requerido'}), 400
+
+    grupo = db.session.get(Grupo, grupo_destino_id)
+    if not grupo:
+        return jsonify({'error': 'Grupo no encontrado'}), 404
+
+    if user.es_profesor() and not user.es_admin() and grupo.profesor_id != user.id:
+        return jsonify({'error': 'No eres el profesor de este grupo'}), 403
+
+    copia = Lectura(
+        titulo=original.titulo,
+        contenido=original.contenido,
+        nivel=original.nivel,
+        tiempo_estimado_minutos=original.tiempo_estimado_minutos,
+        puntos_recompensa=original.puntos_recompensa,
+        categoria=original.categoria,
+        profesor_id=user.id,
+        grupo_id=grupo_destino_id,
+        es_publica=False,
+        activa=True,
+        intentos_maximos=original.intentos_maximos
+    )
+    db.session.add(copia)
+    db.session.flush()
+
+    preguntas_originales = Pregunta.query.filter_by(lectura_id=lectura_id).all()
+    for pq in preguntas_originales:
+        copia_pregunta = Pregunta(
+            lectura_id=copia.id,
+            pregunta=pq.pregunta,
+            opcion_a=pq.opcion_a,
+            opcion_b=pq.opcion_b,
+            opcion_c=pq.opcion_c,
+            opcion_d=pq.opcion_d,
+            respuesta_correcta=pq.respuesta_correcta,
+            explicacion=pq.explicacion,
+            profesor_id=user.id
+        )
+        db.session.add(copia_pregunta)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': f'Lectura "{original.titulo}" replicada al grupo "{grupo.nombre}"',
+        'lectura': copia.to_dict(),
+        'total_preguntas': len(preguntas_originales)
+    }), 201
 
 
 @readings_bp.route('/<int:lectura_id>/completar', methods=['POST'])
